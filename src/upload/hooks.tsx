@@ -156,7 +156,6 @@ export const useActions = (props: TdUploadProps, uploadCtx: UploadCtxType, disab
     const { files } = event.target;
     if (disabled.value) return;
     uploadFiles(files);
-
     (inputRef.value as HTMLInputElement).value = '';
   };
 

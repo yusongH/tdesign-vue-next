@@ -1,5 +1,4 @@
 import { VNode, defineComponent, reactive, computed, toRefs } from 'vue';
-
 import { UploadIcon } from 'tdesign-icons-vue-next';
 import Dragger from './dragger';
 import ImageCard from './image';
@@ -7,16 +6,15 @@ import FlowList from './flow-list';
 import TButton from '../button';
 import TDialog from '../dialog';
 import SingleFile from './single-file';
-
 import props from './props';
 import { UploadCtxType } from './interface';
 import { TdUploadProps } from './type';
-
 import { useFormDisabled } from '../form/hooks';
 import { useComponentsStatus, useImgPreview, useDragger, useRemove, useActions, useBatchUpload } from './hooks';
 import { useConfig, usePrefixClass } from '../hooks/useConfig';
 import { useContent } from '../hooks/tnode';
 import useVModel from '../hooks/useVModel';
+import useHook from './useHook';
 
 export default defineComponent({
   name: 'TUpload',
@@ -24,24 +22,24 @@ export default defineComponent({
 
   setup(props, { expose }) {
     const renderTNodeContent = useContent();
-    const { classPrefix: prefix, global } = useConfig('upload');
+    const { classPrefix: prefix } = useConfig('upload');
     const UPLOAD_NAME = usePrefixClass('upload');
     const { files, modelValue } = toRefs(props);
 
     // 合并上传相关状态
     const { canBatchUpload, uploadInOneRequest } = useBatchUpload(props);
     // handle controlled property and uncontrolled property
-    const [uploadValue, setUploadValue] = useVModel(
-      files,
-      modelValue,
-      props.defaultFiles || [],
-      props.onChange,
-      'files',
-    );
+    // const [uploadValue, setUploadValue] = useVModel(
+    //   files,
+    //   modelValue,
+    //   props.defaultFiles || [],
+    //   props.onChange,
+    //   'files',
+    // );
 
     const uploadCtx: UploadCtxType = reactive({
-      uploadValue,
-      setUploadValue,
+      // uploadValue,
+      // setUploadValue,
       uploadInOneRequest,
       canBatchUpload,
       // 加载中的文件
@@ -73,7 +71,22 @@ export default defineComponent({
     const { handleChange, multipleUpload, triggerUpload, cancelUpload, handleDragChange, upload, inputRef } =
       useActions(props, uploadCtx, disabled);
 
+    const {
+      global,
+      classPrefix,
+      triggerUploadText,
+      toUploadFiles,
+      uploadValue,
+      tipsClasses,
+      errorClasses,
+      onRemove,
+      uploadFiles,
+      onFileChange,
+    } = useHook(props);
+
     expose({
+      toUploadFiles,
+      uploadFiles,
       triggerUpload,
       setPercent: (val: number) => {
         uploadCtx.percent = val;
@@ -87,7 +100,7 @@ export default defineComponent({
           ref={inputRef}
           type="file"
           disabled={disabled.value}
-          onChange={handleChange}
+          onChange={onFileChange}
           multiple={props.multiple}
           accept={props.accept}
           hidden
@@ -101,13 +114,16 @@ export default defineComponent({
         !props.draggable &&
         ['file', 'file-input'].includes(props.theme) && (
           <SingleFile
-            file={uploadValue.value && uploadValue.value[0]}
-            loadingFile={uploadCtx.loadingFile}
-            percent={uploadCtx.percent}
+            files={uploadValue.value}
+            toUploadFiles={toUploadFiles.value}
             theme={props.theme}
-            onRemove={handleSingleRemove}
-            showUploadProgress={props.showUploadProgress}
             placeholder={props.placeholder}
+            global={global}
+            tips={props.tips}
+            classPrefix={classPrefix.value}
+            tipsClasses={tipsClasses.value}
+            errorClasses={errorClasses.value}
+            onRemove={onRemove}
           >
             <div class={`${prefix.value}-upload__trigger`} onclick={triggerUpload}>
               {triggerElement}
@@ -171,7 +187,6 @@ export default defineComponent({
     const renderTrigger = () => {
       const getDefaultTrigger = () => {
         const localeFromProps = props.locale as TdUploadProps['locale'];
-
         if (props.theme === 'file-input' || showUploadList.value) {
           return (
             <t-button variant="outline">
@@ -182,7 +197,7 @@ export default defineComponent({
         const iconSlot = { icon: () => <UploadIcon /> };
         return (
           <TButton variant="outline" v-slots={iconSlot}>
-            {uploadListTriggerText.value}
+            {triggerUploadText.value}
           </TButton>
         );
       };
@@ -273,12 +288,12 @@ export default defineComponent({
         </TDialog>
       );
 
-    const tipsClasses = computed(() => {
-      return [`${UPLOAD_NAME.value}__tips ${prefix.value}-size-s`];
-    });
-    const errorClasses = computed(() => {
-      return tipsClasses.value.concat(`${UPLOAD_NAME.value}__tips-error`);
-    });
+    // const tipsClasses = computed(() => {
+    //   return [`${UPLOAD_NAME.value}__tips ${prefix.value}-size-s`];
+    // });
+    // const errorClasses = computed(() => {
+    //   return tipsClasses.value.concat(`${UPLOAD_NAME.value}__tips-error`);
+    // });
 
     return () => {
       const triggerElement = renderTrigger();
@@ -291,8 +306,8 @@ export default defineComponent({
           {renderImgCard()}
           {renderFlowList(triggerElement)}
           {renderDialog()}
-          {!uploadCtx.errorMsg && showTips.value && <small class={tipsClasses.value}>{props.tips}</small>}
-          {showErrorMsg.value && <small class={errorClasses.value}>{uploadCtx.errorMsg}</small>}
+          {/* {showTips.value && <small class={tipsClasses.value}>{props.tips}</small>} */}
+          {/* {toUploadFiles[0] && <small class={errorClasses.value}>{uploadCtx.errorMsg}</small>} */}
         </div>
       );
     };

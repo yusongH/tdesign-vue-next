@@ -1,117 +1,118 @@
 import { defineComponent, PropType, computed } from 'vue';
-
-import { CloseCircleFilledIcon, ErrorCircleFilledIcon, CheckCircleFilledIcon } from 'tdesign-icons-vue-next';
-import TLoading from '../loading';
-
+import { CloseIcon, ErrorCircleFilledIcon, CheckCircleFilledIcon } from 'tdesign-icons-vue-next';
 import props from './props';
-import { UploadFile } from './type';
+import TLoading from '../loading';
+import { TdUploadProps, UploadFile } from './type';
 import { abridgeName } from './util';
-
 import { useTNodeJSX } from '../hooks/tnode';
-import { useConfig, usePrefixClass } from '../hooks/useConfig';
+// import { useConfig, usePrefixClass } from '../hooks/useConfig';
+import { GlobalConfigProvider } from '../config-provider/type';
 
-const SingleFileProps = {
-  file: {
-    type: Object as PropType<UploadFile>,
-    default: () => {
-      return null as UploadFile;
-    },
-  },
-  loadingFile: {
-    type: Object as PropType<UploadFile>,
-    default: () => {
-      return null as UploadFile;
-    },
-  },
-  percent: {
-    type: Number,
-  },
-  showUploadProgress: props.showUploadProgress,
+export interface RemoveContext {
+  e: MouseEvent;
+  file: UploadFile;
+  index: number;
+}
+
+export interface SingleFileProps {
+  files: TdUploadProps['files'];
+  toUploadFiles: TdUploadProps['files'];
+  theme: TdUploadProps['theme'];
+  placeholder: TdUploadProps['placeholder'];
+  tips?: TdUploadProps['tips'];
+  classPrefix: string;
+  global: GlobalConfigProvider['upload'];
+  tipsClasses?: string[];
+  errorClasses?: string[];
+  onRemove?: (p: RemoveContext) => void;
+}
+
+const singleFileProps = {
+  files: props.files,
+  toUploadFiles: { ...props.files },
   theme: props.theme,
   placeholder: props.placeholder,
-  onRemove: Function as PropType<(e: MouseEvent) => void>,
+  tips: props.tips,
+  classPrefix: String,
+  global: Object as PropType<SingleFileProps['global']>,
+  tipsClasses: Object as PropType<SingleFileProps['tipsClasses']>,
+  errorClasses: Object as PropType<SingleFileProps['errorClasses']>,
+  onRemove: Function as PropType<SingleFileProps['onRemove']>,
 };
 
 export default defineComponent({
   name: 'TUploadSingleFile',
 
-  props: SingleFileProps,
+  props: singleFileProps,
 
-  setup(props) {
+  setup(props: SingleFileProps) {
     const renderTNodeJSX = useTNodeJSX();
-    const { classPrefix: prefix } = useConfig('upload');
-    const UPLOAD_NAME = usePrefixClass('upload');
+    // const { classPrefix: prefix } = useConfig('upload');
+    const UPLOAD_NAME = computed(() => `${props.classPrefix}-upload`);
 
-    const showProgress = computed(() => {
-      return !!(props.loadingFile && props.loadingFile.status === 'progress');
-    });
+    // const showProgress = computed(() => {
+    //   return !!(props.loadingFile && props.loadingFile.status === 'progress');
+    // });
 
-    const inputName = computed(() => {
-      const fileName = props.file && props.file.name;
-      const loadingName = props.loadingFile && props.loadingFile.name;
-      return showProgress.value ? loadingName : fileName;
-    });
-    const inputText = computed(() => {
-      return inputName.value || props.placeholder;
-    });
+    // const inputName = computed(() => {
+    //   const fileName = props.file && props.file.name;
+    //   const loadingName = props.loadingFile && props.loadingFile.name;
+    //   return showProgress.value ? loadingName : fileName;
+    // });
+    // const inputText = computed(() => {
+    //   return inputName.value || props.placeholder;
+    // });
     const inputTextClass = computed(() => {
-      return [`${prefix.value}-input__inner`, { [`${UPLOAD_NAME.value}__placeholder`]: !inputName.value }];
+      return [`${props.classPrefix}-input__inner`, { [`${UPLOAD_NAME.value}__placeholder`]: true }];
     });
     const classes = computed(() => {
       return [`${UPLOAD_NAME.value}__single`, `${UPLOAD_NAME.value}__single-${props.theme}`];
     });
 
-    const renderProgress = () => {
-      if (props.loadingFile.status === 'fail') {
-        return <ErrorCircleFilledIcon />;
-      }
-
-      if (props.showUploadProgress) {
-        return (
-          <div class={`${UPLOAD_NAME.value}__single-progress`}>
-            <TLoading />
-            <span class={`${UPLOAD_NAME.value}__single-percent`}>{Math.min(props.percent, 99)}%</span>
-          </div>
-        );
-      }
+    const renderProgress = (percent: number) => {
+      return (
+        <div class={`${UPLOAD_NAME.value}__single-progress`}>
+          <TLoading />
+          <span class={`${UPLOAD_NAME.value}__single-percent`}>{percent}%</span>
+        </div>
+      );
     };
 
     // 文本型预览
     const renderFilePreviewAsText = () => {
-      if (!inputName.value || props.theme !== 'file') return;
-      return (
+      if (props.theme !== 'file') return null;
+      return props.files.map((file, index) => (
         <div class={`${UPLOAD_NAME.value}__single-display-text ${UPLOAD_NAME.value}__display-text--margin`}>
-          <span class={`${UPLOAD_NAME.value}__single-name`}>{inputName.value}</span>
-          {showProgress.value ? (
-            renderProgress()
-          ) : (
-            <CloseCircleFilledIcon
+          <span class={`${UPLOAD_NAME.value}__single-name`}>{file.name}</span>
+          {file.status === 'waiting' && renderProgress(file.percent)}
+          {file.status === 'success' && (
+            <CloseIcon
               class={`${UPLOAD_NAME.value}__icon-delete`}
-              onClick={({ e }: { e: MouseEvent }) => props.onRemove(e)}
+              onClick={({ e }: { e: MouseEvent }) => props.onRemove({ e, file, index })}
             />
           )}
         </div>
-      );
+      ));
     };
 
     // 输入框型预览
     const renderFilePreviewAsInput = () => {
       if (props.theme !== 'file-input') return;
       const renderResult = () => {
-        if (!!props.loadingFile && props.loadingFile.status === 'fail') {
-          return <ErrorCircleFilledIcon />;
-        }
-        if (props.file && props.file.name && !props.loadingFile) {
-          return <CheckCircleFilledIcon />;
-        }
+        // if (!!props.loadingFile && props.loadingFile.status === 'fail') {
+        //   return <ErrorCircleFilledIcon />;
+        // }
+        // if (props.file && props.file.name && !props.loadingFile) {
+        //   return <CheckCircleFilledIcon />;
+        // }
         return '';
       };
 
       return (
-        <div class={`${UPLOAD_NAME.value}__single-input-preview ${prefix.value}-input`}>
+        <div class={`${UPLOAD_NAME.value}__single-input-preview ${props.classPrefix}-input`}>
           <div class={inputTextClass.value}>
-            {<span class={`${UPLOAD_NAME.value}__single-input-text`}>{abridgeName(inputText.value, 4, 6)}</span>}
-            {showProgress.value && renderProgress()}
+            {<span class={`${UPLOAD_NAME.value}__single-input-text`}>{abridgeName('', 4, 6)}</span>}
+            {/* {showProgress.value && renderProgress()} */}
             {renderResult()}
           </div>
         </div>
@@ -122,7 +123,15 @@ export default defineComponent({
       <div class={classes.value}>
         {renderFilePreviewAsInput()}
         {renderTNodeJSX('default')}
+        {props.tips && <small class={props.tipsClasses}>{props.tips}</small>}
         {renderFilePreviewAsText()}
+        {props.toUploadFiles
+          ?.filter((t) => t.response?.error)
+          .map((file) => (
+            <small class={props.errorClasses}>
+              {file.name} {file.response?.error}
+            </small>
+          ))}
       </div>
     );
   },

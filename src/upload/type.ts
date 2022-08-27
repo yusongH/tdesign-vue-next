@@ -117,10 +117,6 @@ export interface TdUploadProps {
    */
   placeholder?: string;
   /**
-   * 上传进度，优先级最高，会覆盖组件内部的上传进度
-   */
-  progress?: number;
-  /**
    * 自定义上传方法。返回值 `status` 表示上传成功或失败，`error` 或 `response.error` 表示上传失败的原因，`response` 表示请求上传成功后的返回数据，`response.url` 表示上传成功后的图片地址。示例一：`{ status: 'fail', error: '上传失败', response }`。示例二：`{ status: 'success', response: { url: 'https://tdesign.gtimg.com/site/avatar.jpg' } }`
    */
   requestMethod?: (files: UploadFile | UploadFile[]) => Promise<RequestMethodResponse>;
@@ -187,11 +183,15 @@ export interface TdUploadProps {
    */
   onFail?: (options: { e: ProgressEvent; file: UploadFile; currentFiles: UploadFile[]; response?: any }) => void;
   /**
+   * 单个文件上传成功后触发，在多文件场景下会触发多次。`context.file` 表示当前上传成功的单个文件，`context.response` 表示上传请求的返回数据
+   */
+  onOneFileSuccess?: (context: Pick<SuccessContext, 'e' | 'file' | 'response'>) => void;
+  /**
    * 点击预览时触发
    */
   onPreview?: (options: { file: UploadFile; e: MouseEvent }) => void;
   /**
-   * 上传进度变化时触发，真实进度和模拟进度都会触发。type 值为 real 表示真实上传进度，type 值为 mock 表示模拟上传进度
+   * 上传进度变化时触发，真实进度和模拟进度都会触发。`type=real` 表示真实上传进度，`type=mock` 表示模拟上传进度
    */
   onProgress?: (options: ProgressContext) => void;
   /**
@@ -293,7 +293,8 @@ export interface UploadChangeContext {
 
 export interface ProgressContext {
   e?: ProgressEvent;
-  file: UploadFile;
+  file?: UploadFile;
+  currentFiles: UploadFile[];
   percent: number;
   type: UploadProgressType;
 }

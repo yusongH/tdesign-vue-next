@@ -28,7 +28,6 @@ method | String | POST | options：POST/GET/PUT/OPTION/PATCH/post/get/put/option
 multiple | Boolean | false | \- | N
 name | String | file | \- | N
 placeholder | String | - | \- | N
-progress | Number | - | progress number | N
 requestMethod | Function | - | Typescript：`(files: UploadFile | UploadFile[]) => Promise<RequestMethodResponse>` `interface RequestMethodResponse { status: 'success' | 'fail'; error?: string; response: { url?: string; [key: string]: any } }`。[see more ts definition](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts) | N
 showUploadProgress | Boolean | true | \- | N
 sizeLimit | Number / Object | - | Typescript：`number | SizeLimitObj` `interface SizeLimitObj { size: number; unit: SizeUnit ; message?: string }` `type SizeUnitArray = ['B', 'KB', 'MB', 'GB']` `type SizeUnit = SizeUnitArray[number]`。[see more ts definition](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts) | N
@@ -44,8 +43,9 @@ onDragenter | Function |  | Typescript：`(context: { e: DragEvent }) => void`<b
 onDragleave | Function |  | Typescript：`(context: { e: DragEvent }) => void`<br/> | N
 onDrop | Function |  | Typescript：`(context: { e: DragEvent }) => void`<br/> | N
 onFail | Function |  | Typescript：`(options: { e: ProgressEvent; file: UploadFile; currentFiles: UploadFile[]; response?: any }) => void`<br/>`response.error` used for error tips, `formatResponse` can format `response` | N
+onOneFileSuccess | Function |  | Typescript：`(context: Pick<SuccessContext, 'e' | 'file' | 'response'>) => void`<br/> | N
 onPreview | Function |  | Typescript：`(options: { file: UploadFile; e: MouseEvent }) => void`<br/> | N
-onProgress | Function |  | Typescript：`(options: ProgressContext) => void`<br/>[see more ts definition](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface ProgressContext { e?: ProgressEvent; file: UploadFile; percent: number; type: UploadProgressType }`<br/><br/>`type UploadProgressType = 'real' | 'mock'`<br/> | N
+onProgress | Function |  | Typescript：`(options: ProgressContext) => void`<br/>[see more ts definition](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface ProgressContext { e?: ProgressEvent; file?: UploadFile; currentFiles: UploadFile[]; percent: number; type: UploadProgressType }`<br/><br/>`type UploadProgressType = 'real' | 'mock'`<br/> | N
 onRemove | Function |  | Typescript：`(context: UploadRemoveContext) => void`<br/>[see more ts definition](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface UploadRemoveContext { index?: number; file?: UploadFile; e: MouseEvent }`<br/> | N
 onSelectChange | Function |  | Typescript：`(files: File[]) => void`<br/>trigger after file choose and before upload | N
 onSuccess | Function |  | Typescript：`(context: SuccessContext) => void`<br/>[see more ts definition](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface SuccessContext { e?: ProgressEvent; file?: UploadFile; fileList?: UploadFile[]; currentFiles?: UploadFile[]; response?: any; results?: SuccessContext[] }`<br/> | N
@@ -61,8 +61,9 @@ dragenter | `(context: { e: DragEvent })` | \-
 dragleave | `(context: { e: DragEvent })` | \-
 drop | `(context: { e: DragEvent })` | \-
 fail | `(options: { e: ProgressEvent; file: UploadFile; currentFiles: UploadFile[]; response?: any })` | `response.error` used for error tips, `formatResponse` can format `response`
+one-file-success | `(context: Pick<SuccessContext, 'e' | 'file' | 'response'>)` | \-
 preview | `(options: { file: UploadFile; e: MouseEvent })` | \-
-progress | `(options: ProgressContext)` | [see more ts definition](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface ProgressContext { e?: ProgressEvent; file: UploadFile; percent: number; type: UploadProgressType }`<br/><br/>`type UploadProgressType = 'real' | 'mock'`<br/>
+progress | `(options: ProgressContext)` | [see more ts definition](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface ProgressContext { e?: ProgressEvent; file?: UploadFile; currentFiles: UploadFile[]; percent: number; type: UploadProgressType }`<br/><br/>`type UploadProgressType = 'real' | 'mock'`<br/>
 remove | `(context: UploadRemoveContext)` | [see more ts definition](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface UploadRemoveContext { index?: number; file?: UploadFile; e: MouseEvent }`<br/>
 select-change | `(files: File[])` | trigger after file choose and before upload
 success | `(context: SuccessContext)` | [see more ts definition](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface SuccessContext { e?: ProgressEvent; file?: UploadFile; fileList?: UploadFile[]; currentFiles?: UploadFile[]; response?: any; results?: SuccessContext[] }`<br/>
