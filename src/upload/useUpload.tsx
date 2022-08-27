@@ -143,7 +143,7 @@ export const useUpload = (props: TdUploadProps, uploadCtx: UploadCtxType) => {
       typeof props.sizeLimit === 'number' ? { size: props.sizeLimit, unit: 'KB' } : props.sizeLimit;
 
     const rSize = isOverSizeLimit(fileSize / 1024, sizeLimit.size, sizeLimit.unit);
-    if (!rSize) {
+    if (rSize) {
       // 有参数 message 则使用，没有就使用全局 locale 配置
       uploadCtx.errorMsg = sizeLimit.message
         ? t(sizeLimit.message, { sizeLimit: sizeLimit.size })
@@ -264,7 +264,7 @@ export const useUpload = (props: TdUploadProps, uploadCtx: UploadCtxType) => {
     }
 
     tmpFiles.forEach((fileRaw: File) => {
-      let file: UploadFile | File = fileRaw;
+      let file: UploadFile = fileRaw;
       if (typeof props.format === 'function') {
         file = props.format(fileRaw);
       }

@@ -13,7 +13,7 @@ export default {
     type: String,
     default: '',
   },
-  /** 上传接口 */
+  /** 上传接口。设接口响应数据为字段 `response`，那么 `response.error` 存在时会判断此次上传失败，并显示错误文本信息；`response.url` 会作为文件上传成功后的地址，并使用该地址显示图片 */
   action: {
     type: String,
     default: '',
@@ -25,7 +25,11 @@ export default {
     type: Boolean,
     default: true,
   },
-  /** 上传文件之前的钩子，参数为上传的文件，返回值决定是否上传 */
+  /** 全部文件上传之前的钩子，参数为上传的文件，返回值决定是否继续上传，若返回值为 `false` 则终止上传 */
+  beforeAllFilesUpload: {
+    type: Function as PropType<TdUploadProps['beforeAllFilesUpload']>,
+  },
+  /** 单文件上传之前的钩子，参数为上传的文件，返回值决定是否继续上传，若返回值为 `false` 则终止上传 */
   beforeUpload: {
     type: Function as PropType<TdUploadProps['beforeUpload']>,
   },
@@ -62,7 +66,7 @@ export default {
   format: {
     type: Function as PropType<TdUploadProps['format']>,
   },
-  /** 用于格式化文件上传后的响应数据。error 用于显示错误提示，如果 error 值为真，组件会判定为上传失败；url 用于上传文件/图片地址 */
+  /** 用于格式化文件上传后的接口响应数据，`response` 便是接口响应的原始数据。<br/> 此函数的返回值 `error` 或 `response.error` 会作为错误文本提醒，如果存在会判定为本次上传失败。<br/> 此函数的返回值 `url` 或 `response.url` 会作为上传成功后的链接 */
   formatResponse: {
     type: Function as PropType<TdUploadProps['formatResponse']>,
   },
@@ -102,7 +106,11 @@ export default {
     type: String,
     default: '',
   },
-  /** 自定义上传方法。返回值 status 表示上传成功或失败，error 表示上传失败的原因，response 表示请求上传成功后的返回数据，response.url 表示上传成功后的图片地址。示例一：`{ status: 'fail', error: '上传失败', response }`。示例二：`{ status: 'success', response: { url: 'https://tdesign.gtimg.com/site/avatar.jpg' } }` */
+  /** 上传进度，优先级最高，会覆盖组件内部的上传进度 */
+  progress: {
+    type: Number,
+  },
+  /** 自定义上传方法。返回值 `status` 表示上传成功或失败，`error` 或 `response.error` 表示上传失败的原因，`response` 表示请求上传成功后的返回数据，`response.url` 表示上传成功后的图片地址。示例一：`{ status: 'fail', error: '上传失败', response }`。示例二：`{ status: 'success', response: { url: 'https://tdesign.gtimg.com/site/avatar.jpg' } }` */
   requestMethod: {
     type: Function as PropType<TdUploadProps['requestMethod']>,
   },
@@ -152,7 +160,7 @@ export default {
   onDragleave: Function as PropType<TdUploadProps['onDragleave']>,
   /** 拖拽结束时触发 */
   onDrop: Function as PropType<TdUploadProps['onDrop']>,
-  /** 上传失败后触发 */
+  /** 上传失败后触发。`response` 指接口响应结果，`response.error` 会作为错误文本提醒。如果接口响应数据不包含 `error` 字段，可以使用 `formatResponse` 格式化 `response` 数据结构 */
   onFail: Function as PropType<TdUploadProps['onFail']>,
   /** 点击预览时触发 */
   onPreview: Function as PropType<TdUploadProps['onPreview']>,
@@ -162,6 +170,8 @@ export default {
   onRemove: Function as PropType<TdUploadProps['onRemove']>,
   /** 文件选择后，上传开始前，触发 */
   onSelectChange: Function as PropType<TdUploadProps['onSelectChange']>,
-  /** 上传成功后触发，`context.currentFiles` 表示当次请求上传的文件，`context.fileList` 表示上传成功后的文件，`context.response` 表示上传请求的返回数据。<br />⚠️ `context.file` 请勿使用 */
+  /** 上传成功后触发。<br/>`context.currentFiles` 表示当次请求上传的文件，`context.fileList` 表示上传成功后的文件，`context.response` 表示上传请求的返回数据。<br/>`context.results` 表示单次选择全部文件上传成功后的响应结果，可以在这个字段存在时提醒用户上传成功或失败。<br />⚠️ `context.file` 请勿使用 */
   onSuccess: Function as PropType<TdUploadProps['onSuccess']>,
+  /** 文件上传校验结束事件，有文件数量超出时会触发，文件大小超出限制时会触发等场景 */
+  onValidate: Function as PropType<TdUploadProps['onValidate']>,
 };
