@@ -57,7 +57,7 @@ export interface TdUploadProps {
   /**
    * 用于完全自定义文件列表内容
    */
-  fileListDisplay?: TNode;
+  fileListDisplay?: TNode<{ displayFiles: UploadFile[] }>;
   /**
    * 已上传文件列表
    */
@@ -71,9 +71,13 @@ export interface TdUploadProps {
    */
   modelValue?: Array<UploadFile>;
   /**
-   * 文件上传前转换文件数据
+   * 文件上传前转换文件的数据结构，可新增或修改文件对象的属性
    */
   format?: (file: File) => UploadFile;
+  /**
+   * 用于新增或修改文件上传请求参数
+   */
+  formatRequest?: (requestData: { [key: string]: any }) => { [key: string]: any };
   /**
    * 用于格式化文件上传后的接口响应数据，`response` 便是接口响应的原始数据。<br/> 此函数的返回值 `error` 或 `response.error` 会作为错误文本提醒，如果存在会判定为本次上传失败。<br/> 此函数的返回值 `url` 或 `response.url` 会作为上传成功后的链接
    */
@@ -199,9 +203,9 @@ export interface TdUploadProps {
    */
   onRemove?: (context: UploadRemoveContext) => void;
   /**
-   * 文件选择后，上传开始前，触发
+   * 选择文件或图片之后，上传之前，触发该事件
    */
-  onSelectChange?: (files: File[]) => void;
+  onSelectChange?: (files: File[], context: UploadSelectChangeContext) => void;
   /**
    * 上传成功后触发。<br/>`context.currentFiles` 表示当次请求上传的文件，`context.fileList` 表示上传成功后的文件，`context.response` 表示上传请求的返回数据。<br/>`context.results` 表示单次选择全部文件上传成功后的响应结果，可以在这个字段存在时提醒用户上传成功或失败。<br />⚠️ `context.file` 请勿使用
    */
@@ -209,7 +213,11 @@ export interface TdUploadProps {
   /**
    * 文件上传校验结束事件，有文件数量超出时会触发，文件大小超出限制时会触发等场景
    */
-  onValidate?: (context: { type: 'FILE_OVER_SIZE_LIMIT' | 'FILES_OVER_LENGTH_LIMIT' | 'FILE_OVER_SIZE_LIMIT' }) => void;
+  onValidate?: (context: { type: 'FILE_OVER_SIZE_LIMIT' | 'FILES_OVER_LENGTH_LIMIT'; files: UploadFile[] }) => void;
+  /**
+   * 待上传文件列表发生变化时触发，事件参数为待上传文件
+   */
+  onWaitingUploadFilesChange?: (files: Array<UploadFile>) => void;
 }
 
 export interface UploadFile {
@@ -305,6 +313,10 @@ export interface UploadRemoveContext {
   index?: number;
   file?: UploadFile;
   e: MouseEvent;
+}
+
+export interface UploadSelectChangeContext {
+  currentSelectedFiles: UploadFile[];
 }
 
 export interface SuccessContext {

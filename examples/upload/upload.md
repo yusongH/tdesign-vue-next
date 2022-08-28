@@ -15,10 +15,11 @@ data | Object | - | 上传文件时所需的额外数据。TS 类型：`Record<s
 default | String / Slot / Function | - | 触发上传的内容，同 trigger。TS 类型：`string | TNode`。[通用类型定义](https://github.com/Tencent/tdesign-vue-next/blob/develop/src/common.ts) | N
 disabled | Boolean | false | 是否禁用 | N
 draggable | Boolean | false | 是否启用拖拽上传 | N
-fileListDisplay | Slot / Function | - | 用于完全自定义文件列表内容。TS 类型：`TNode`。[通用类型定义](https://github.com/Tencent/tdesign-vue-next/blob/develop/src/common.ts) | N
+fileListDisplay | Slot / Function | - | 用于完全自定义文件列表内容。TS 类型：`TNode<{ displayFiles: UploadFile[] }>`。[通用类型定义](https://github.com/Tencent/tdesign-vue-next/blob/develop/src/common.ts) | N
 files | Array | - | 已上传文件列表。支持语法糖 `v-model` 或 `v-model:files`。TS 类型：`Array<UploadFile>` | N
 defaultFiles | Array | - | 已上传文件列表。非受控属性。TS 类型：`Array<UploadFile>` | N
-format | Function | - | 文件上传前转换文件数据。TS 类型：`(file: File) => UploadFile` | N
+format | Function | - | 文件上传前转换文件的数据结构，可新增或修改文件对象的属性。TS 类型：`(file: File) => UploadFile` | N
+formatRequest | Function | - | 用于新增或修改文件上传请求参数。TS 类型：`(requestData: { [key: string]: any }) => { [key: string]: any }` | N
 formatResponse | Function | - | 用于格式化文件上传后的接口响应数据，`response` 便是接口响应的原始数据。<br/> 此函数的返回值 `error` 或 `response.error` 会作为错误文本提醒，如果存在会判定为本次上传失败。<br/> 此函数的返回值 `url` 或 `response.url` 会作为上传成功后的链接。TS 类型：`(response: any, context: FormatResponseContext) => ResponseType ` `type ResponseType = { error?: string; url?: string } & Record<string, any>` `interface FormatResponseContext { file: UploadFile; currentFiles?: UploadFile[] }`。[详细类型定义](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts) | N
 headers | Object | - | 设置上传的请求头部。TS 类型：`{[key: string]: string}` | N
 isBatchUpload | Boolean | false | 文件是否作为一个独立文件包，整体替换，整体删除。不允许追加文件，只允许替换文件 | N
@@ -47,9 +48,10 @@ onOneFileSuccess | Function |  | TS 类型：`(context: Pick<SuccessContext, 'e'
 onPreview | Function |  | TS 类型：`(options: { file: UploadFile; e: MouseEvent }) => void`<br/>点击预览时触发 | N
 onProgress | Function |  | TS 类型：`(options: ProgressContext) => void`<br/>上传进度变化时触发，真实进度和模拟进度都会触发。`type=real` 表示真实上传进度，`type=mock` 表示模拟上传进度。[详细类型定义](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface ProgressContext { e?: ProgressEvent; file?: UploadFile; currentFiles: UploadFile[]; percent: number; type: UploadProgressType }`<br/><br/>`type UploadProgressType = 'real' | 'mock'`<br/> | N
 onRemove | Function |  | TS 类型：`(context: UploadRemoveContext) => void`<br/>移除文件时触发。[详细类型定义](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface UploadRemoveContext { index?: number; file?: UploadFile; e: MouseEvent }`<br/> | N
-onSelectChange | Function |  | TS 类型：`(files: File[]) => void`<br/>文件选择后，上传开始前，触发 | N
+onSelectChange | Function |  | TS 类型：`(files: File[], context: UploadSelectChangeContext) => void`<br/>选择文件或图片之后，上传之前，触发该事件。[详细类型定义](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface UploadSelectChangeContext { currentSelectedFiles: UploadFile[] }`<br/> | N
 onSuccess | Function |  | TS 类型：`(context: SuccessContext) => void`<br/>上传成功后触发。<br/>`context.currentFiles` 表示当次请求上传的文件，`context.fileList` 表示上传成功后的文件，`context.response` 表示上传请求的返回数据。<br/>`context.results` 表示单次选择全部文件上传成功后的响应结果，可以在这个字段存在时提醒用户上传成功或失败。<br />⚠️ `context.file` 请勿使用。[详细类型定义](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface SuccessContext { e?: ProgressEvent; file?: UploadFile; fileList?: UploadFile[]; currentFiles?: UploadFile[]; response?: any; results?: SuccessContext[] }`<br/> | N
-onValidate | Function |  | TS 类型：`(context: { type: 'FILE_OVER_SIZE_LIMIT' | 'FILES_OVER_LENGTH_LIMIT' | 'FILE_OVER_SIZE_LIMIT' }) => void`<br/>文件上传校验结束事件，有文件数量超出时会触发，文件大小超出限制时会触发等场景 | N
+onValidate | Function |  | TS 类型：`(context: { type: 'FILE_OVER_SIZE_LIMIT' | 'FILES_OVER_LENGTH_LIMIT', files: UploadFile[] }) => void`<br/>文件上传校验结束事件，有文件数量超出时会触发，文件大小超出限制时会触发等场景 | N
+onWaitingUploadFilesChange | Function |  | TS 类型：`(files: Array<UploadFile>) => void`<br/>待上传文件列表发生变化时触发，事件参数为待上传文件 | N
 
 ### Upload Events
 
@@ -65,9 +67,10 @@ one-file-success | `(context: Pick<SuccessContext, 'e' | 'file' | 'response'>)` 
 preview | `(options: { file: UploadFile; e: MouseEvent })` | 点击预览时触发
 progress | `(options: ProgressContext)` | 上传进度变化时触发，真实进度和模拟进度都会触发。`type=real` 表示真实上传进度，`type=mock` 表示模拟上传进度。[详细类型定义](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface ProgressContext { e?: ProgressEvent; file?: UploadFile; currentFiles: UploadFile[]; percent: number; type: UploadProgressType }`<br/><br/>`type UploadProgressType = 'real' | 'mock'`<br/>
 remove | `(context: UploadRemoveContext)` | 移除文件时触发。[详细类型定义](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface UploadRemoveContext { index?: number; file?: UploadFile; e: MouseEvent }`<br/>
-select-change | `(files: File[])` | 文件选择后，上传开始前，触发
+select-change | `(files: File[], context: UploadSelectChangeContext)` | 选择文件或图片之后，上传之前，触发该事件。[详细类型定义](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface UploadSelectChangeContext { currentSelectedFiles: UploadFile[] }`<br/>
 success | `(context: SuccessContext)` | 上传成功后触发。<br/>`context.currentFiles` 表示当次请求上传的文件，`context.fileList` 表示上传成功后的文件，`context.response` 表示上传请求的返回数据。<br/>`context.results` 表示单次选择全部文件上传成功后的响应结果，可以在这个字段存在时提醒用户上传成功或失败。<br />⚠️ `context.file` 请勿使用。[详细类型定义](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface SuccessContext { e?: ProgressEvent; file?: UploadFile; fileList?: UploadFile[]; currentFiles?: UploadFile[]; response?: any; results?: SuccessContext[] }`<br/>
-validate | `(context: { type: 'FILE_OVER_SIZE_LIMIT' | 'FILES_OVER_LENGTH_LIMIT' | 'FILE_OVER_SIZE_LIMIT' })` | 文件上传校验结束事件，有文件数量超出时会触发，文件大小超出限制时会触发等场景
+validate | `(context: { type: 'FILE_OVER_SIZE_LIMIT' | 'FILES_OVER_LENGTH_LIMIT', files: UploadFile[] })` | 文件上传校验结束事件，有文件数量超出时会触发，文件大小超出限制时会触发等场景
+waiting-upload-files-change | `(files: Array<UploadFile>)` | 待上传文件列表发生变化时触发，事件参数为待上传文件
 
 ### UploadFile
 

@@ -21,6 +21,7 @@ export default function useUpload(props: TdUploadProps) {
   // TODO: 可能存在多个请求，一个不够
   const xhrReq = ref<XMLHttpRequest>();
   const toUploadFiles = ref<UploadFile[]>([]);
+  const sizeOverLimitMessage = ref('');
   // 单文件场景：触发元素文本
   const triggerUploadText = computed(() => {
     const field = getTriggerTextField({
@@ -28,6 +29,17 @@ export default function useUpload(props: TdUploadProps) {
       status: uploadValue.value?.[0]?.status,
     });
     return global.value.triggerUploadText[field];
+  });
+
+  const uploading = ref(false);
+
+  // 文件列表显示的内容（自动上传和非自动上传有所不同）
+  const displayFiles = computed(() => {
+    if (props.multiple) {
+      return props.autoUpload ? uploadValue.value : uploadValue.value.concat(toUploadFiles.value);
+    }
+    const hasToUploadFile = Boolean(toUploadFiles.value.length);
+    return (props.autoUpload || !hasToUploadFile ? uploadValue.value : toUploadFiles.value) || [];
   });
 
   const onResponseError = (p: OnResponseErrorContext) => {
@@ -56,7 +68,7 @@ export default function useUpload(props: TdUploadProps) {
     if (!props.multiple || props.uploadAllFilesInOneRequest) return;
     props.onOneFileSuccess?.({
       e: p.event,
-      file: p.file,
+      file: p.files[0],
       response: p.response,
     });
   };
@@ -71,7 +83,7 @@ export default function useUpload(props: TdUploadProps) {
   function onFileChange(event: HTMLInputEvent) {
     if (props.disabled) return;
     const { files } = event.target;
-    props.onSelectChange?.([...files]);
+    props.onSelectChange?.([...files], { currentSelectedFiles: toUploadFiles.value });
     validateFile({
       uploadValue: uploadValue.value,
       files: [...files],
@@ -86,16 +98,21 @@ export default function useUpload(props: TdUploadProps) {
       if (args.validateResult?.type === 'BEFORE_ALL_FILES_UPLOAD') return;
       // 文件数量校验不通过
       if (args.lengthOverLimit) {
-        props.onValidate?.({ type: 'FILES_OVER_LENGTH_LIMIT' });
+        props.onValidate?.({ type: 'FILES_OVER_LENGTH_LIMIT', files: args.files });
       }
-      // 文件数量校验
+      // 文件大小校验结果处理
       if (args.fileValidateList instanceof Array) {
-        const { firstError, toFiles } = getFilesAndErrors(args.fileValidateList, getSizeLimitError);
-        toUploadFiles.value = toFiles;
+        const { sizeLimitErrors, toFiles } = getFilesAndErrors(args.fileValidateList, getSizeLimitError);
+        const tmpWatingFiles = props.autoUpload ? toFiles : toUploadFiles.value.concat(toFiles);
+        toUploadFiles.value = tmpWatingFiles;
+        props.onWaitingUploadFilesChange?.(tmpWatingFiles);
         // 错误信息处理
-        if (firstError) {
-          props.onValidate?.({ type: 'FILE_OVER_SIZE_LIMIT' });
+        if (sizeLimitErrors[0]) {
+          sizeOverLimitMessage.value = sizeLimitErrors[0].file.response.error;
+          props.onValidate?.({ type: 'FILE_OVER_SIZE_LIMIT', files: sizeLimitErrors.map((t) => t.file) });
+          return;
         }
+        sizeOverLimitMessage.value = '';
         // 如果是自动上传
         if (props.autoUpload) {
           uploadFiles(toFiles);
@@ -110,6 +127,7 @@ export default function useUpload(props: TdUploadProps) {
    */
   function uploadFiles(toFiles?: UploadFile[]) {
     const files = toFiles || toUploadFiles.value;
+    uploading.value = true;
     upload({
       uploadedFiles: uploadValue.value,
       toUploadFiles: files,
@@ -118,7 +136,10 @@ export default function useUpload(props: TdUploadProps) {
       uploadAllFilesInOneRequest: props.uploadAllFilesInOneRequest,
       action: props.action,
       useMockProgress: props.useMockProgress,
+      data: props.data,
       requestMethod: props.requestMethod,
+      formatRequest: props.formatRequest,
+      formatResponse: props.formatResponse,
       onResponseProgress,
       onResponseSuccess,
       onResponseError,
@@ -136,7 +157,7 @@ export default function useUpload(props: TdUploadProps) {
         });
       }
       // 失败的文件（补充失败的默认文本信息）
-      toUploadFiles.value = (failedFiles || []).map((file) => {
+      const tmpFiles = (failedFiles || []).map((file) => {
         if (!file.response || !file.response.error) {
           if (!file.response) {
             file.response = {};
@@ -145,12 +166,26 @@ export default function useUpload(props: TdUploadProps) {
         }
         return file;
       });
+      toUploadFiles.value = tmpFiles;
+      props.onWaitingUploadFilesChange?.(tmpFiles);
+
+      uploading.value = false;
     }, onResponseError);
   }
 
   function onRemove(p: RemoveContext) {
+    sizeOverLimitMessage.value = '';
     uploadValue.value.splice(p.index, 1);
     setUploadValue(uploadValue.value);
+
+    const index = toUploadFiles.value.findIndex((t) => t.raw === p.file.raw);
+    if (index >= 0) {
+      const tmpFiles = [...toUploadFiles.value];
+      tmpFiles.splice(index, 1);
+      toUploadFiles.value = tmpFiles;
+      props.onWaitingUploadFilesChange?.(tmpFiles);
+    }
+
     props.onRemove?.(p);
   }
 
@@ -168,6 +203,9 @@ export default function useUpload(props: TdUploadProps) {
     triggerUploadText,
     toUploadFiles,
     uploadValue,
+    displayFiles,
+    sizeOverLimitMessage,
+    uploading,
     tipsClasses,
     errorClasses,
     uploadFiles,

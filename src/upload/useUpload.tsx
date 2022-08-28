@@ -253,7 +253,7 @@ export const useUpload = (props: TdUploadProps, uploadCtx: UploadCtxType) => {
       uploadCtx.setUploadValue([], context);
     }
 
-    props.onSelectChange?.([...files]);
+    // props.onSelectChange?.([...files]);
 
     let tmpFiles = [...files];
     if (props.max) {
@@ -264,39 +264,39 @@ export const useUpload = (props: TdUploadProps, uploadCtx: UploadCtxType) => {
     }
 
     tmpFiles.forEach((fileRaw: File) => {
-      let file: UploadFile = fileRaw;
+      let uploadFile: UploadFile;
       if (typeof props.format === 'function') {
-        file = props.format(fileRaw);
+        uploadFile = props.format(fileRaw);
+      } else {
+        uploadFile = {
+          raw: fileRaw,
+          lastModified: fileRaw.lastModified,
+          name: fileRaw.name,
+          size: fileRaw.size,
+          type: fileRaw.type,
+          percent: 0,
+          status: 'waiting',
+        };
       }
-      const uploadFile: UploadFile = {
-        raw: fileRaw,
-        lastModified: fileRaw.lastModified,
-        name: fileRaw.name,
-        size: fileRaw.size,
-        type: fileRaw.type,
-        percent: 0,
-        status: 'waiting',
-        ...file,
-      };
 
       const reader = new FileReader();
       reader.readAsDataURL(fileRaw);
       reader.onload = (event: ProgressEvent<FileReader>) => {
         uploadFile.url = event.target.result as string;
       };
-      handleBeforeUpload(file).then((canUpload) => {
-        if (!canUpload) return;
-        const newFiles = uploadCtx.toUploadFiles.concat();
-        // 判断是否为重复文件条件，已选是否存在检验
-        if (props.allowUploadDuplicateFile || !uploadCtx.toUploadFiles.find((file) => file.name === uploadFile.name)) {
-          newFiles.push(uploadFile);
-        }
-        uploadCtx.toUploadFiles = [...new Set(newFiles)];
-        uploadCtx.loadingFile = uploadFile;
-        if (props.autoUpload) {
-          upload(uploadFile);
-        }
-      });
+      // handleBeforeUpload(file).then((canUpload) => {
+      //   if (!canUpload) return;
+      //   const newFiles = uploadCtx.toUploadFiles.concat();
+      //   // 判断是否为重复文件条件，已选是否存在检验
+      //   if (props.allowUploadDuplicateFile || !uploadCtx.toUploadFiles.find((file) => file.name === uploadFile.name)) {
+      //     newFiles.push(uploadFile);
+      //   }
+      //   uploadCtx.toUploadFiles = [...new Set(newFiles)];
+      //   uploadCtx.loadingFile = uploadFile;
+      //   if (props.autoUpload) {
+      //     upload(uploadFile);
+      //   }
+      // });
     });
   };
 

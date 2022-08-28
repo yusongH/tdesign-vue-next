@@ -20,7 +20,7 @@ export default defineComponent({
   name: 'TUpload',
   props,
 
-  setup(props, { expose }) {
+  setup(props, { expose, slots }) {
     const renderTNodeContent = useContent();
     const { classPrefix: prefix } = useConfig('upload');
     const UPLOAD_NAME = usePrefixClass('upload');
@@ -76,7 +76,10 @@ export default defineComponent({
       classPrefix,
       triggerUploadText,
       toUploadFiles,
+      displayFiles,
       uploadValue,
+      sizeOverLimitMessage,
+      uploading,
       tipsClasses,
       errorClasses,
       onRemove,
@@ -85,7 +88,9 @@ export default defineComponent({
     } = useHook(props);
 
     expose({
-      toUploadFiles,
+      uploading,
+      waitingUploadFiles: toUploadFiles,
+      displayFiles,
       uploadFiles,
       triggerUpload,
       setPercent: (val: number) => {
@@ -116,13 +121,18 @@ export default defineComponent({
           <SingleFile
             files={uploadValue.value}
             toUploadFiles={toUploadFiles.value}
+            displayFiles={displayFiles.value}
             theme={props.theme}
             placeholder={props.placeholder}
             global={global}
             tips={props.tips}
+            sizeOverLimitMessage={sizeOverLimitMessage.value}
             classPrefix={classPrefix.value}
             tipsClasses={tipsClasses.value}
             errorClasses={errorClasses.value}
+            fileListDisplay={props.fileListDisplay}
+            autoUpload={props.autoUpload}
+            v-slots={{ fileListDisplay: slots.fileListDisplay }}
             onRemove={onRemove}
           >
             <div class={`${prefix.value}-upload__trigger`} onclick={triggerUpload}>
@@ -189,9 +199,9 @@ export default defineComponent({
         const localeFromProps = props.locale as TdUploadProps['locale'];
         if (props.theme === 'file-input' || showUploadList.value) {
           return (
-            <t-button variant="outline">
+            <TButton variant="outline">
               {localeFromProps?.triggerUploadText?.fileInput || global.value.triggerUploadText.fileInput}
-            </t-button>
+            </TButton>
           );
         }
         const iconSlot = { icon: () => <UploadIcon /> };
@@ -203,7 +213,8 @@ export default defineComponent({
       };
 
       const defaultNode = getDefaultTrigger();
-      return renderTNodeContent('default', 'trigger', defaultNode);
+      const triggerNode = renderTNodeContent('default', 'trigger', defaultNode);
+      return triggerNode || defaultNode;
     };
 
     // 完全自定义上传

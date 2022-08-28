@@ -80,6 +80,18 @@ export const useTNodeDefault = () => {
   };
 };
 
+// 如果节点全部是注释，也被认为是空节点
+export function isEmptyNode(node: VNode | VNode[]) {
+  let emptyNode = false;
+  if (node instanceof Array) {
+    const realNode = node.filter((t) => !(t?.type?.toString() === 'Symbol(Comment)'));
+    emptyNode = !realNode.length;
+  } else if (node?.type?.toString() === 'Symbol(Comment)') {
+    emptyNode = true;
+  }
+  return isEmpty(node) || emptyNode;
+}
+
 /**
  * 在setup中，用于处理相同名称的 TNode 渲染
  * @example const renderContent = useContent()
@@ -103,7 +115,7 @@ export const useContent = () => {
     const node1 = renderTNodeJSX(name1, toParams);
     const node2 = renderTNodeJSX(name2, toParams);
 
-    const res = isEmpty(node1) ? node2 : node1;
-    return isEmpty(res) ? defaultNode : res;
+    const res = isEmptyNode(node1) ? node2 : node1;
+    return isEmptyNode(res) ? defaultNode : res;
   };
 };

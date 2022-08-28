@@ -15,10 +15,11 @@ data | Object | - | Typescript：`Record<string, any> | ((file: File) => Record<
 default | String / Slot / Function | - | Typescript：`string | TNode`。[see more ts definition](https://github.com/Tencent/tdesign-vue-next/blob/develop/src/common.ts) | N
 disabled | Boolean | false | \- | N
 draggable | Boolean | false | \- | N
-fileListDisplay | Slot / Function | - | Typescript：`TNode`。[see more ts definition](https://github.com/Tencent/tdesign-vue-next/blob/develop/src/common.ts) | N
+fileListDisplay | Slot / Function | - | Typescript：`TNode<{ displayFiles: UploadFile[] }>`。[see more ts definition](https://github.com/Tencent/tdesign-vue-next/blob/develop/src/common.ts) | N
 files | Array | - | `v-model` and `v-model:files` is supported。Typescript：`Array<UploadFile>` | N
 defaultFiles | Array | - | uncontrolled property。Typescript：`Array<UploadFile>` | N
 format | Function | - | Typescript：`(file: File) => UploadFile` | N
+formatRequest | Function | - | Typescript：`(requestData: { [key: string]: any }) => { [key: string]: any }` | N
 formatResponse | Function | - | Typescript：`(response: any, context: FormatResponseContext) => ResponseType ` `type ResponseType = { error?: string; url?: string } & Record<string, any>` `interface FormatResponseContext { file: UploadFile; currentFiles?: UploadFile[] }`。[see more ts definition](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts) | N
 headers | Object | - | Typescript：`{[key: string]: string}` | N
 isBatchUpload | Boolean | false | \- | N
@@ -47,9 +48,10 @@ onOneFileSuccess | Function |  | Typescript：`(context: Pick<SuccessContext, 'e
 onPreview | Function |  | Typescript：`(options: { file: UploadFile; e: MouseEvent }) => void`<br/> | N
 onProgress | Function |  | Typescript：`(options: ProgressContext) => void`<br/>[see more ts definition](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface ProgressContext { e?: ProgressEvent; file?: UploadFile; currentFiles: UploadFile[]; percent: number; type: UploadProgressType }`<br/><br/>`type UploadProgressType = 'real' | 'mock'`<br/> | N
 onRemove | Function |  | Typescript：`(context: UploadRemoveContext) => void`<br/>[see more ts definition](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface UploadRemoveContext { index?: number; file?: UploadFile; e: MouseEvent }`<br/> | N
-onSelectChange | Function |  | Typescript：`(files: File[]) => void`<br/>trigger after file choose and before upload | N
+onSelectChange | Function |  | Typescript：`(files: File[], context: UploadSelectChangeContext) => void`<br/>trigger after file choose and before upload。[see more ts definition](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface UploadSelectChangeContext { currentSelectedFiles: UploadFile[] }`<br/> | N
 onSuccess | Function |  | Typescript：`(context: SuccessContext) => void`<br/>[see more ts definition](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface SuccessContext { e?: ProgressEvent; file?: UploadFile; fileList?: UploadFile[]; currentFiles?: UploadFile[]; response?: any; results?: SuccessContext[] }`<br/> | N
-onValidate | Function |  | Typescript：`(context: { type: 'FILE_OVER_SIZE_LIMIT' | 'FILES_OVER_LENGTH_LIMIT' | 'FILE_OVER_SIZE_LIMIT' }) => void`<br/>trigger on length over limit, or trigger on file size over limit | N
+onValidate | Function |  | Typescript：`(context: { type: 'FILE_OVER_SIZE_LIMIT' | 'FILES_OVER_LENGTH_LIMIT', files: UploadFile[] }) => void`<br/>trigger on length over limit, or trigger on file size over limit | N
+onWaitingUploadFilesChange | Function |  | Typescript：`(files: Array<UploadFile>) => void`<br/>waiting upload files | N
 
 ### Upload Events
 
@@ -65,9 +67,10 @@ one-file-success | `(context: Pick<SuccessContext, 'e' | 'file' | 'response'>)` 
 preview | `(options: { file: UploadFile; e: MouseEvent })` | \-
 progress | `(options: ProgressContext)` | [see more ts definition](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface ProgressContext { e?: ProgressEvent; file?: UploadFile; currentFiles: UploadFile[]; percent: number; type: UploadProgressType }`<br/><br/>`type UploadProgressType = 'real' | 'mock'`<br/>
 remove | `(context: UploadRemoveContext)` | [see more ts definition](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface UploadRemoveContext { index?: number; file?: UploadFile; e: MouseEvent }`<br/>
-select-change | `(files: File[])` | trigger after file choose and before upload
+select-change | `(files: File[], context: UploadSelectChangeContext)` | trigger after file choose and before upload。[see more ts definition](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface UploadSelectChangeContext { currentSelectedFiles: UploadFile[] }`<br/>
 success | `(context: SuccessContext)` | [see more ts definition](https://github.com/Tencent/tdesign-vue-next/tree/develop/src/upload/type.ts)。<br/>`interface SuccessContext { e?: ProgressEvent; file?: UploadFile; fileList?: UploadFile[]; currentFiles?: UploadFile[]; response?: any; results?: SuccessContext[] }`<br/>
-validate | `(context: { type: 'FILE_OVER_SIZE_LIMIT' | 'FILES_OVER_LENGTH_LIMIT' | 'FILE_OVER_SIZE_LIMIT' })` | trigger on length over limit, or trigger on file size over limit
+validate | `(context: { type: 'FILE_OVER_SIZE_LIMIT' | 'FILES_OVER_LENGTH_LIMIT', files: UploadFile[] })` | trigger on length over limit, or trigger on file size over limit
+waiting-upload-files-change | `(files: Array<UploadFile>)` | waiting upload files
 
 ### UploadFile
 
