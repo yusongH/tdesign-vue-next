@@ -70,6 +70,7 @@ export default defineComponent({
         [STATUS.value.selected]: isSelected.value,
         [`${selectName.value}-option__hover`]:
           (isHover.value || selectProvider.value.hoverIndex === props.index) && !disabled.value && !isSelected.value,
+        [`${selectName.value}-option__multiple`]: selectProvider.value && props.multiple,
       },
     ]);
 
